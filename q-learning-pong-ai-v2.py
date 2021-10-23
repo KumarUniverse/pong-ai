@@ -21,8 +21,8 @@ class Ball():
     """The ball object (The cube that bounces back and forth)."""
 
     def __init__(self, pong_game):
-        self.width = 18
-        self.height = 18
+        self.width = 1000 // 5 #18 for debugging, need to change back.
+        self.height = 1000 // 5 #18
         self.x = pong_game.canvas_width // 2
         self.y = pong_game.canvas_height // 2
         self.move_x = DIRECTION["IDLE"]
@@ -53,6 +53,7 @@ class PongGame(pyglet.window.Window):
         self.canvas_height = 1000  # 500
 
         self.ai1 = Paddle(self, 'left')
+        self.ai1.height = self.canvas_height // 3 # for debugging, need to remove.
         #self.ai1.speed = 5  # 6
         self.ai2 = Paddle(self, 'right')
         self.ball = Ball(self)
@@ -137,7 +138,7 @@ class PongGame(pyglet.window.Window):
         #print("after pyglet")
 
         while self.ai1.score < winning_score and self.ai2.score < winning_score:
-            if self.qlearn_mode: #not self.qlearn_mode:
+            if not self.qlearn_mode:
                 pyglet.clock.tick()
 
                 for window in pyglet.app.windows:
@@ -163,8 +164,8 @@ class PongGame(pyglet.window.Window):
             if self.ball.x <= 0:  # ai1 lost, ai2 won the round.
                 self.reset_turn(self.ai2, self.ai1)
                 # Punish the AI every time it misses the ball.
-                if qlearn_mode and self.qagent.prev_state is not None:
-                    self.qagent.update_reward(-1)
+                # if qlearn_mode and self.qagent.prev_state is not None:
+                #     self.qagent.update_reward(-1)
             elif self.ball.x >= self.canvas_width - self.ball.width: # ai1 won, ai2 lost.
                 #print("AI1 scored a goal.")
                 self.reset_turn(self.ai1, self.ai2)
@@ -435,12 +436,12 @@ class Qagent():
     def glimpse_qtable(self):
         """Print out a small part of the Q table."""
         print("Q table:")
-        for i in range(10):
+        for i in range(self.num_ball_states):
             # num_y_directions, num_ball_states, num_paddle_states
             print(f"State (0,{i},0): {self.qtable[0][i][0]}")  # take a glimpse at the reward table.
-        print(f"State (0,18,7): {self.qtable[0][18][7]}")  # take a glimpse at the reward table.
-        print(f"State (1,13,7): {self.qtable[1][13][7]}")  # take a glimpse at the reward table.
-        print(f"State (0,47,8): {self.qtable[0][47][8]}")  # take a glimpse at the reward table.
+        # print(f"State (0,18,7): {self.qtable[0][18][7]}")  # take a glimpse at the reward table.
+        # print(f"State (1,13,7): {self.qtable[1][13][7]}")  # take a glimpse at the reward table.
+        # print(f"State (0,47,8): {self.qtable[0][47][8]}")  # take a glimpse at the reward table.
 
 if __name__ == '__main__':
     pong_game = PongGame()

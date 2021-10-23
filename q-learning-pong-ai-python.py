@@ -93,6 +93,7 @@ class PongGame():
             # On new serve (start of each turn), reset the paddles to their
             # center position and move the ball to the correct side.
             if self.turn:
+                #print("your turn")
                 self.ai1.y = (self.canvas_height // 2) - 35
                 self.ai2.y = (self.canvas_height // 2) - 35
                 self.ball.move_x = DIRECTION["LEFT"] if self.turn == self.ai1 else DIRECTION["RIGHT"]
@@ -165,7 +166,7 @@ class PongGame():
             elif self.ai2.y + (self.ai2.height // 2) < self.ball.y:
                 self.ai2.y += self.ai2.speed
 
-            # Handle ai1 ball collision.
+            # Handle ai1 (q agent) ball collision.
             if self.ball.x <= self.ai1.x + self.ai1.width and \
                 self.ball.x + self.ball.width >= self.ai1.x:
                 if self.ball.y <= self.ai1.y + self.ai1.height and \
@@ -200,7 +201,7 @@ class PongGame():
                             self.ball.x = self.ai2.x - self.ball.width
                             self.ball.move_x = DIRECTION["LEFT"]
                             qagent_next_state = self.qagent.play_game()
-                        else:
+                        else: # misses ball
                             self.ball.x += self.ai2.width * 2
 
         if qlearn_mode:
@@ -225,11 +226,11 @@ class Qagent():
         self.opponent = opponent
         self.ball = ball
         self.alpha = 0.1  # learning rate.
-        self.gamma = 0.8  # discount factor.
+        self.gamma = 0.1  # discount factor. # Before: 0.8
         self.epsilon = 1  # randomness factor. e=0 makes the agent greedy.
         self.num_y_directions = 2
-        self.num_paddle_states = math.ceil(pong_game.canvas_height / self.paddle.height)
-        self.num_ball_states = math.ceil(pong_game.canvas_height / self.ball.height)
+        self.num_paddle_states = math.ceil(pong_game.canvas_height / self.paddle.height)  # 15
+        self.num_ball_states = math.ceil(pong_game.canvas_height / self.ball.height)      # 56
         self.reward = [
                 [[0]*self.num_paddle_states] * self.num_ball_states
         ] * self.num_y_directions
@@ -259,23 +260,33 @@ class Qagent():
         """The Q function Q(s,a) gives the quality of taking action a in state s."""
         ball_direction = s[0]
         ball_x_state = s[1]
-        next_state_q_values = self.qtable[ball_direction][ball_x_state]
+        try:
+            next_state_q_values = self.qtable[ball_direction][ball_x_state]
+        except IndexError:
+            print(f"ball direction value: {ball_direction}")
+            print(f"ball x state: {ball_x_state}")
         next_state_max_q = max(next_state_q_values)
-        self.qtable[ball_direction][ball_x_state][a] = round(
+        self.qtable[ball_direction][ball_x_state][a] = (
             self.qtable[ball_direction][ball_x_state][a]
             + self.alpha * (self.r(s, a) + self.gamma * next_state_max_q
                 - self.qtable[ball_direction][ball_x_state][a]
             )
-        , 3)
+        )
 
         return self.qtable[ball_direction][ball_x_state][a]
 
     def get_curr_paddle_state(self):
         """Return the current state of the paddle as an integer."""
-        return self.paddle.y // (self.pong_game.canvas_height // self.num_paddle_states)
+        curr_state = self.paddle.y // (self.pong_game.canvas_height // self.num_paddle_states)
+        if curr_state >= self.num_paddle_states:
+            return self.num_paddle_states - 1
+        return curr_state
 
     def get_curr_ball_state(self):
-        return self.ball.y // (self.pong_game.canvas_height // self.num_ball_states)
+        curr_state = self.ball.y // (self.pong_game.canvas_height // self.num_ball_states)
+        if curr_state >= self.num_ball_states:
+            return self.num_ball_states - 1
+        return curr_state
 
     def qlearn(self):
         """Make the Q agent learn about its environment."""
@@ -313,7 +324,11 @@ class Qagent():
         best_next_state = self.get_curr_paddle_state()
         ball_direction = self.ball.move_y - 1
         ball_x_state = self.get_curr_ball_state()
-        next_state_q_values = self.qtable[ball_direction][ball_x_state]
+        try:
+            next_state_q_values = self.qtable[ball_direction][ball_x_state]
+        except IndexError:
+                print(f"ball direction value: {ball_direction}")
+                print(f"ball x state: {ball_x_state}")
         curr_q = next_state_q_values[best_next_state]
         for state in range(len(next_state_q_values)):
             state_q = next_state_q_values[state]

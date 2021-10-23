@@ -55,7 +55,7 @@ var Game = {
     this.ai2 = Paddle.new.call(this, 'right');
     this.ball = Ball.new.call(this);
 
-    //this.ai2.speed = 8;      // Make ai2's paddle speed slower than ai.
+    //this.ai.speed = 6;      // Make ai2's paddle speed slower than ai.
     this.running = false;   // To check whether the game is running.
     this.over = false;      // To check if the game is over.
     this.turn = this.ai2;    // It's the ai2's turn first.
@@ -217,8 +217,8 @@ var Game = {
       }
 
       // Handle ai-ball collisions
-      if (this.ball.x - this.ball.width <= this.ai.x &&
-          this.ball.x >= this.ai.x - this.ai.width) {
+      if (this.ball.x <= this.ai.x + this.ai.width &&
+          this.ball.x + this.ball.width >= this.ai.x) {
           if (this.ball.y <= this.ai.y + this.ai.height &&
               this.ball.y + this.ball.height >= this.ai.y) {
               this.ball.x = this.ai.x + this.ball.width;
@@ -227,8 +227,8 @@ var Game = {
       }
 
       // Handle ai2-ball collision
-      if (this.ball.x - this.ball.width <= this.ai2.x &&
-          this.ball.x >= this.ai2.x - this.ai2.width) {
+      if (this.ball.x <= this.ai2.x + this.ai2.width &&
+          this.ball.x + this.ball.width >= this.ai2.x) {
           if (this.ball.y <= this.ai2.y + this.ai2.height &&
               this.ball.y + this.ball.height >= this.ai2.y) {
               this.ball.x = this.ai2.x - this.ball.width;
